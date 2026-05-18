@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet --version 2>/dev/null; dotnet --list-sdks 2>/dev/null | tail -5)",
+      "Bash(node --version 2>/dev/null; npm --version 2>/dev/null)",
+      "Bash(\"/c/Program Files/dotnet/dotnet.exe\" --list-sdks 2>&1)",
+      "Bash(dotnet --info 2>&1 | head -30)",
+      "Bash(cd /d/spyros/projects/SoftwareDeploy/Server && dotnet build 2>&1)",
+      "Bash(dotnet --version 2>&1 || echo \"dotnet not found\"; node --version 2>&1 || echo \"node not found\"; npm --version 2>&1 || echo \"npm not found\")",
+      "Bash(cd /d/spyros/projects/SoftwareDeploy/Dashboard && npm install 2>&1)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite:*)",
+      "PowerShell(New-Item *)"
+    ]
+  }
+}
