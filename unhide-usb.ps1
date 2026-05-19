@@ -1,4 +1,4 @@
-# unhide-usb.ps1
+﻿# unhide-usb.ps1
 # Επαναφέρει αρχεία που έκρυψε USB virus και διαγράφει ύποπτα shortcuts/autorun.inf
 # Χρήση: .\unhide-usb.ps1
 
