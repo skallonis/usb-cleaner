@@ -62,7 +62,18 @@ Write-Section "Επαναφορά κρυμμένων αρχείων"
 $unhideCount = 0
 $failCount   = 0
 
+# Φάκελοι συστήματος των Windows: μένουν κρυφοί, ελέγχονται μόνο για malware (βήμα 3d)
+$protectedDirs = @('System Volume Information', '$RECYCLE.BIN') | ForEach-Object { Join-Path $root $_ }
+
+function Test-Protected($path) {
+    foreach ($p in $protectedDirs) {
+        if ($path -ieq $p -or $path.StartsWith("$p\", [StringComparison]::OrdinalIgnoreCase)) { return $true }
+    }
+    return $false
+}
+
 Get-ChildItem -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue | ForEach-Object {
+    if (Test-Protected $_.FullName) { return }
     try {
         $attrs = $_.Attributes
         $needsFix = ($attrs -band [IO.FileAttributes]::Hidden) -or
@@ -157,6 +168,25 @@ foreach ($exe in $exes) {
             $deleted += "$($exe.FullName)  [exe twin folder]"
         } catch {
             $skipped += "$($exe.FullName) ($($_.Exception.Message))"
+        }
+    }
+}
+
+# 3d. Εκτελέσιμα / scripts μέσα σε System Volume Information και $RECYCLE.BIN.
+# Τα Windows δεν βάζουν ποτέ τέτοια αρχεία εκεί. Στον Κάδο εξαιρούνται τα $R*/$I*,
+# που είναι αρχεία που διέγραψε ο ίδιος ο χρήστης.
+$badExt = '.exe', '.scr', '.com', '.pif', '.bat', '.cmd', '.vbs', '.vbe',
+          '.js', '.jse', '.wsf', '.ps1', '.lnk', '.dll'
+foreach ($p in $protectedDirs) {
+    if (-not (Test-Path -LiteralPath $p)) { continue }
+    Get-ChildItem -LiteralPath $p -Recurse -Force -File -ErrorAction SilentlyContinue | ForEach-Object {
+        if ($badExt -notcontains $_.Extension.ToLower()) { return }
+        if ($_.Name -match '^\$[RI]') { return }
+        try {
+            Remove-Item -LiteralPath $_.FullName -Force -ErrorAction Stop
+            $deleted += "$($_.FullName)  [executable in system folder]"
+        } catch {
+            $skipped += "$($_.FullName) ($($_.Exception.Message))"
         }
     }
 }
